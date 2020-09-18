@@ -42,8 +42,8 @@ class User(AbstractBaseUser,PermissionsMixin):
 
     email = models.EmailField(_("email_address"),unique=True)
     username = models.CharField(_("username"),max_length=30,blank=True)
-    profile_image = models.ImageField(upload_to="profile_image")
-    introduction = models.TextField(max_length=255)
+    profile_image = models.ImageField(upload_to="profile_image",blank=True,null=True)
+    introduction = models.TextField(max_length=255,blank=True,null=True)
 
     is_staff = models.BooleanField(
         _('staff status'),
@@ -87,14 +87,11 @@ class Category(models.Model):
     name = models.CharField(max_length=20)
     objects = models.Manager()
 
-    def __str__(self):
-        return self.name
-
 
 class Product(models.Model):
     title = models.CharField(max_length=50,blank=False,null=False)
     description = models.TextField(max_length=500,blank=False,null=False)
-    product_image = models.ImageField(upload_to="product_image")
+    product_image = models.ImageField(upload_to="product_image",blank=True,null=True)
     provider = models.ForeignKey(User,on_delete=models.CASCADE)
     category = models.ForeignKey(Category,on_delete=models.CASCADE)
     is_sold = models.BooleanField(default=False)
@@ -104,6 +101,9 @@ class Product(models.Model):
 
     def __str__(self):
         return self.title
+
+    def provider_name(self):
+        return self.provider.username
 
     def category_name(self):
         return self.category.name
@@ -115,5 +115,10 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     objects = models.Manager()
 
+    def buyer_name(self):
+        return self.buyer.username
+
+    def product_name(self):
+        return self.product.name
 
 

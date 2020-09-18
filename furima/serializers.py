@@ -43,7 +43,7 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             "id","title","description","product_image","provider",
-            "category_name","is_sold","created_at","price"
+            "category","is_sold","created_at","price","provider_name","category_name"
         ]
         extra_kwargs = {
             "id": {"read_only": True},
