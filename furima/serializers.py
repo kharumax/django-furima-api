@@ -56,7 +56,7 @@ class ProductSerializer(serializers.ModelSerializer):
         return product
 
 
-class Order(serializers.ModelSerializer):
+class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order

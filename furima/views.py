@@ -5,6 +5,7 @@ from .models import *
 from django.contrib.auth import get_user_model
 from rest_framework.permissions import AllowAny,IsAuthenticated,BasePermission
 from rest_framework import status
+from django.db.models import Q
 
 User = get_user_model()
 
@@ -75,6 +76,17 @@ class ProductListView(generics.ListAPIView):
     permission_classes = (AllowAny,)
     queryset = Product.objects.all()
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if "keyword" in self.request.GET and self.request.GET["keyword"] is not None:
+            keyword = self.request.GET["keyword"]
+            keywords = keyword.split(' ')
+            for word in keywords:
+                queryset = queryset.filter(
+                    Q(title__icontains=word) | Q(description__icontains=word)
+                )
+        return queryset
+
 
 class ProductRetrieveView(generics.RetrieveAPIView):
     serializer_class = ProductSerializer
@@ -109,8 +121,6 @@ class ProductCreateView(generics.CreateAPIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
-        print("This is Product View")
-        print("This is request.data : {}".format(request.data))
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(provider=self.request.user)
@@ -151,4 +161,20 @@ class ProductDeleteView(generics.DestroyAPIView):
         }
         return Response(response,status=status.HTTP_204_NO_CONTENT)
 
+
 # Order
+class OrderCreateView(generics.CreateAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        product = Product.objects.get(id=self.kwargs.get("pk"))
+        serializer.save(buyer=self.request.user,product=product)
+        response = {
+            "success": True,
+            "status": status.HTTP_201_CREATED,
+            "data": serializer.data
+        }
+        return Response(response,status=status.HTTP_201_CREATED)
