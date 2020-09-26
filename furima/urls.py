@@ -19,4 +19,9 @@ urlpatterns = [
 
     # Order
     path('products/<int:pk>/order/',OrderCreateView.as_view(),name="product_order"),
+
+    # MyPage
+    path('mypage/',MyPageView.as_view(),name="mypage"),
+    path('get_current_user/',GetCurrentUserView.as_view(),name="get_current_user"),
+    
 ]

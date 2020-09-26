@@ -6,6 +6,8 @@ from django.contrib.auth import get_user_model
 from rest_framework.permissions import AllowAny,IsAuthenticated,BasePermission
 from rest_framework import status
 from django.db.models import Q
+from rest_framework.views import APIView
+import json
 
 User = get_user_model()
 
@@ -78,6 +80,7 @@ class ProductListView(generics.ListAPIView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        # キーワード検索を行う場合
         if "keyword" in self.request.GET and self.request.GET["keyword"] is not None:
             keyword = self.request.GET["keyword"]
             keywords = keyword.split(' ')
@@ -85,6 +88,10 @@ class ProductListView(generics.ListAPIView):
                 queryset = queryset.filter(
                     Q(title__icontains=word) | Q(description__icontains=word)
                 )
+        # カテゴリ検索を行う場合
+        if "categories" in self.request.GET and self.request.GET["categories"] is not None:
+            category_id = self.request.GET["categories"]
+            queryset = queryset.filter(category=category_id)
         return queryset
 
 
@@ -178,3 +185,41 @@ class OrderCreateView(generics.CreateAPIView):
             "data": serializer.data
         }
         return Response(response,status=status.HTTP_201_CREATED)
+
+
+class MyPageView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self,request):
+        user = self.request.user
+        products = Order.objects.filter(buyer=user).product
+        json_products = json.dumps(products.to_dict())
+
+        if user.profile_image:
+            image_url = user.profile_image.url
+        else:
+            image_url = ""
+        response = {
+            "username": user.username,
+            "profile_image": image_url,
+            "introduction": user.introduction,
+            "products": json_products
+        }
+        return Response(response,status=status.HTTP_200_OK)
+
+
+class GetCurrentUserView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self,request):
+        user = self.request.user
+        if user.profile_image:
+            image_url = user.profile_image.url
+        else:
+            image_url = ""
+        response = {
+            "username": user.username,
+            "profile_image": image_url,
+            "introduction": user.introduction
+        }
+        return Response(response,status=status.HTTP_200_OK)
