@@ -102,6 +102,11 @@ class ProductRetrieveView(generics.RetrieveAPIView):
     def get(self, request, *args, **kwargs):
         product_id = self.kwargs.get("pk")
         product = Product.objects.get(id=product_id)
+        provider = product.provider
+        if provider.profile_image:
+            provider_image_url = provider.profile_image.url
+        else:
+            provider_image_url = ""
         if product.product_image:
             image_url = product.product_image.url
         else:
@@ -113,6 +118,7 @@ class ProductRetrieveView(generics.RetrieveAPIView):
                 "title": product.title,
                 "description": product.description,
                 "image_url": image_url,
+                "provider_image_url": provider_image_url,
                 "provider_name": product.provider.username,
                 "category_name": product.category.name,
                 "is_sold": product.is_sold,
